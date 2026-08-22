@@ -6,5 +6,8 @@
   "background_color": "#F6FCFC",
   "theme_color": "#087A86",
   "lang": "ru",
-  "icons": [{ "src": "icon.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" }]
+  "icons": [
+    { "src": "pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
 }
