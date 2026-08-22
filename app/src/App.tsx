@@ -29,34 +29,50 @@ export default function App() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(getFamilyCode() ? 'syncing' : 'not-connected')
   const [syncError, setSyncError] = useState('')
   const syncInProgress = useRef(false)
+  const refreshVersion = useRef(0)
 
-  const refresh = async () => {
-    const savedAthlete = await db.athletes.toCollection().first()
+  // Background sync must refresh records without navigating the person away
+  // from the page they are currently reading or filling in.
+  const refresh = async (setInitialScreen = false) => {
+    const version = ++refreshVersion.current
+    const [savedAthlete, savedResults] = await Promise.all([
+      db.athletes.toCollection().first(),
+      db.results.filter((result) => !result.deletedAt).toArray(),
+    ])
+    if (version !== refreshVersion.current) return savedAthlete ?? null
+
     setAthlete(savedAthlete ?? null)
-    setResults(await db.results.filter((result) => !result.deletedAt).toArray())
-    setScreen(savedAthlete ? 'home' : 'onboarding')
+    setResults(savedResults)
+    if (setInitialScreen) setScreen(savedAthlete ? 'home' : 'onboarding')
+    return savedAthlete ?? null
   }
-  useEffect(() => { refresh(); const on = () => setOffline(!navigator.onLine); addEventListener('online', on); addEventListener('offline', on); return () => { removeEventListener('online', on); removeEventListener('offline', on) } }, [])
-  const sync = async (code = getFamilyCode()) => {
+  useEffect(() => { void refresh(true); const on = () => setOffline(!navigator.onLine); addEventListener('online', on); addEventListener('offline', on); return () => { removeEventListener('online', on); removeEventListener('offline', on) } }, [])
+  const sync = async (code = getFamilyCode(), openFamilyOnStart = false) => {
     if (!code) return
     if (!navigator.onLine) { setSyncStatus('offline'); return }
     setSyncStatus('syncing'); setSyncError('')
-    try { await synchronizeFamily(code); setSyncStatus('synced'); await refresh() }
+    try {
+      const sharedState = await synchronizeFamily(code)
+      setSyncStatus('synced')
+      await refresh()
+      if (openFamilyOnStart && sharedState.athlete) setScreen('home')
+    }
     catch (error) { setSyncStatus('error'); setSyncError(error instanceof Error ? error.message : 'Не удалось синхронизировать данные') }
   }
   useEffect(() => {
-    const runSync = () => {
+    const runSync = (openFamilyOnStart = false) => {
       if (syncInProgress.current) return
       syncInProgress.current = true
-      void sync().finally(() => { syncInProgress.current = false })
+      void sync(getFamilyCode(), openFamilyOnStart).finally(() => { syncInProgress.current = false })
     }
     const onVisible = () => { if (document.visibilityState === 'visible') runSync() }
-    runSync()
-    addEventListener('online', runSync)
+    const onOnline = () => runSync()
+    runSync(true)
+    addEventListener('online', onOnline)
     addEventListener('visibilitychange', onVisible)
     const interval = window.setInterval(onVisible, 30_000)
     return () => {
-      removeEventListener('online', runSync)
+      removeEventListener('online', onOnline)
       removeEventListener('visibilitychange', onVisible)
       window.clearInterval(interval)
     }
@@ -64,7 +80,7 @@ export default function App() {
   const saveAthlete = async (name: string, birthDate: string, photoUrl?: string) => {
     const normalizedName = normalizeName(name)
     const time = now(); const item: Athlete = athlete ?? { id: newId(), name: normalizedName, birthDate, createdAt: time, updatedAt: time }
-    await db.athletes.put({ ...item, name: normalizedName, birthDate, photoUrl, updatedAt: time }); await db.outbox.put({ id: newId(), type: 'upsert-athlete', entityId: item.id, createdAt: time }); await refresh(); void sync()
+    await db.athletes.put({ ...item, name: normalizedName, birthDate, photoUrl, updatedAt: time }); await db.outbox.put({ id: newId(), type: 'upsert-athlete', entityId: item.id, createdAt: time }); await refresh(); setScreen('home'); void sync()
   }
   const saveResult = async (input: Omit<SwimResult, 'id' | 'athleteId' | 'createdAt' | 'updatedAt'>, existing?: SwimResult) => {
     if (!athlete) return; const time = now(); const item: SwimResult = existing ? { ...existing, ...input, updatedAt: time } : { ...input, id: newId(), athleteId: athlete.id, createdAt: time, updatedAt: time }
@@ -85,6 +101,7 @@ export default function App() {
       saveFamilyCode(normalizedCode)
       setSyncStatus('synced')
       await refresh()
+      setScreen('home')
       return null
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Не удалось синхронизировать данные'
