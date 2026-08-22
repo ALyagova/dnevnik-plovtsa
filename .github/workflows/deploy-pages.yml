@@ -27,12 +27,12 @@ jobs:
           version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           cache-dependency-path: app/pnpm-lock.yaml
       - name: Установить зависимости
         working-directory: app
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --prod=false
       - name: Собрать приложение
         working-directory: app
         run: pnpm run build:pages
