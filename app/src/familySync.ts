@@ -3,6 +3,8 @@ import type { Athlete, SwimResult } from './types'
 
 const API_URL = 'https://dnevnik-plovtsa-api.aalyagova.workers.dev'
 const CODE_KEY = 'dnevnik-plovtsa-family-code'
+const NETWORK_ATTEMPTS = 3
+const NETWORK_RETRY_DELAYS = [450, 900]
 
 export type FamilyState = { athlete: Athlete | null; results: SwimResult[] }
 
@@ -60,16 +62,40 @@ function merge(local: FamilyState, remote: FamilyState): FamilyState {
   return { athlete, results: newest(local.results, remote.results) }
 }
 
+const pause = (milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds))
+
+/**
+ * A mobile browser can occasionally drop one request while waking up or
+ * switching between Wi-Fi and mobile data. Retry only rejected network
+ * requests: an HTTP response (such as an invalid family code) must be shown
+ * to the person immediately and never retried as though it were a bad code.
+ */
+export async function retryNetworkRequest<T>(operation: () => Promise<T>, wait = pause): Promise<T> {
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < NETWORK_ATTEMPTS; attempt += 1) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error
+      if (attempt < NETWORK_ATTEMPTS - 1) await wait(NETWORK_RETRY_DELAYS[attempt])
+    }
+  }
+
+  throw lastError
+}
+
 async function request(code: string, method: 'GET' | 'PUT', state?: FamilyState) {
   let response: Response
   try {
-    response = await fetch(`${API_URL}/state`, {
+    response = await retryNetworkRequest(() => fetch(`${API_URL}/state`, {
       method,
-      headers: { 'Content-Type': 'application/json', 'X-Family-Code': code },
+      headers: { ...(state ? { 'Content-Type': 'application/json' } : {}), 'X-Family-Code': code },
       body: state ? JSON.stringify(state) : undefined,
-    })
+      cache: 'no-store',
+    }))
   } catch {
-    throw new Error('Нет связи с семейным сервером')
+    throw new Error('Не удалось подключиться. Данные сохранены на этом устройстве, попробуем ещё раз.')
   }
   if (!response.ok) {
     if (response.status === 401) throw new Error('Проверьте семейный код')

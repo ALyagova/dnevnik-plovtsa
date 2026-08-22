@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeFamilyState } from './familySync'
+import { normalizeFamilyState, retryNetworkRequest } from './familySync'
 
 describe('семейная синхронизация', () => {
   it('распаковывает старый вложенный ответ сервера', () => {
@@ -12,5 +12,27 @@ describe('семейная синхронизация', () => {
   it('не падает на пустом или неполном ответе', () => {
     expect(normalizeFamilyState({ state: { athlete: null } })).toEqual({ athlete: null, results: [] })
     expect(normalizeFamilyState(null)).toBeNull()
+  })
+
+  it('повторяет временную сетевую ошибку до трёх раз', async () => {
+    let calls = 0
+    const value = await retryNetworkRequest(async () => {
+      calls += 1
+      if (calls < 3) throw new Error('network error')
+      return 'готово'
+    }, async () => {})
+
+    expect(value).toBe('готово')
+    expect(calls).toBe(3)
+  })
+
+  it('не делает больше трёх попыток при постоянной сетевой ошибке', async () => {
+    let calls = 0
+    await expect(retryNetworkRequest(async () => {
+      calls += 1
+      throw new Error('network error')
+    }, async () => {})).rejects.toThrow('network error')
+
+    expect(calls).toBe(3)
   })
 })
