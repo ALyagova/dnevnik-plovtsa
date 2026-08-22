@@ -1,0 +1,314 @@
+/* Изображение получает только та карточка, для которой оно предназначено.
+   Тёмный слой оставляет название стиля читаемым на маленьком экране. */
+.style-card {
+  background-image:
+    linear-gradient(90deg, rgba(5, 47, 59, 0.92) 0%, rgba(5, 47, 59, 0.70) 34%, rgba(5, 47, 59, 0.12) 67%),
+    url('/breaststroke-card.png?v=23');
+  background-position: center;
+  background-size: cover;
+}
+
+.style-card.freestyle {
+  background-image:
+    linear-gradient(90deg, rgba(5, 47, 59, 0.92) 0%, rgba(5, 47, 59, 0.70) 34%, rgba(5, 47, 59, 0.12) 67%),
+    url('/freestyle-card.png?v=16');
+}
+
+.style-card.backstroke {
+  background-image:
+    linear-gradient(90deg, rgba(5, 47, 59, 0.92) 0%, rgba(5, 47, 59, 0.70) 34%, rgba(5, 47, 59, 0.12) 67%),
+    url('/backstroke-card.png?v=16');
+}
+
+.style-card.medley {
+  background-image:
+    linear-gradient(90deg, rgba(5, 47, 59, 0.92) 0%, rgba(5, 47, 59, 0.70) 34%, rgba(5, 47, 59, 0.12) 67%),
+    url('/medley-card.png?v=16');
+}
+
+.style-card.butterfly {
+  background-image:
+    linear-gradient(90deg, rgba(5, 47, 59, 0.92) 0%, rgba(5, 47, 59, 0.70) 34%, rgba(5, 47, 59, 0.12) 67%),
+    url('/butterfly-card.png?v=24');
+  background-position: center;
+}
+
+.result-filters {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+
+.result-filters label {
+  display: grid;
+  gap: 8px;
+  color: #082f3a;
+  font-weight: 700;
+}
+
+.result-filters select {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid #c9e2e5;
+  border-radius: 16px;
+  background: #fff;
+  color: #082f3a;
+}
+
+.event-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin: -3px 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e7f7ee;
+  color: #087a54;
+  font-weight: 700;
+}
+
+.brand {
+  align-items: center;
+  font-size: 28px;
+  line-height: 34px;
+  justify-content: flex-start;
+  margin: 0;
+}
+
+.brand img {
+  width: 58px;
+  height: 42px;
+}
+
+.onboarding-title {
+  margin: 38px 0 8px !important;
+  font-size: 24px !important;
+}
+
+.result-row {
+  width: 100%;
+  min-height: 106px;
+  margin: 0 auto;
+  padding: 18px 16px;
+  grid-template-columns: minmax(0, 1fr) 174px;
+  grid-template-areas:
+    "date meta"
+    "discipline time";
+  gap: 8px 16px;
+}
+
+.result-row.style-breaststroke { border-left: 5px solid #008c87; }
+.result-row.style-freestyle { border-left: 5px solid #1768ad; }
+.result-row.style-backstroke { border-left: 5px solid #1698b5; }
+.result-row.style-butterfly { border-left: 5px solid #075b70; }
+.result-row.style-medley { border-left: 5px solid #0b7894; }
+
+.result-row.style-breaststroke .discipline b,
+.result-row.style-breaststroke .result-time { color: #008c87; }
+.result-row.style-freestyle .discipline b,
+.result-row.style-freestyle .result-time { color: #1768ad; }
+.result-row.style-backstroke .discipline b,
+.result-row.style-backstroke .result-time { color: #1698b5; }
+.result-row.style-butterfly .discipline b,
+.result-row.style-butterfly .result-time { color: #075b70; }
+.result-row.style-medley .discipline b,
+.result-row.style-medley .result-time { color: #0b7894; }
+
+.result-row .date {
+  grid-area: date;
+  align-self: center;
+}
+
+.result-row .result-time {
+  grid-area: time;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.result-row strong {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.result-row .discipline {
+  grid-area: discipline;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.result-row .discipline b {
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.result-row .discipline span {
+  font-size: 17px;
+  font-weight: 600;
+  color: #315d68;
+  white-space: nowrap;
+}
+
+.result-row .result-meta {
+  grid-area: meta;
+  align-self: center;
+  justify-self: end;
+  font-size: 15px;
+  white-space: nowrap;
+  color: #536e75;
+}
+
+.result-row .result-meta.competition {
+  color: #087a54;
+  font-weight: 400;
+}
+
+.result-row .progress-arrow {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+}
+
+.result-row .progress-arrow svg {
+  width: 34px;
+  height: 34px;
+  stroke-width: 2.1;
+}
+
+.result-row .progress-arrow.improved {
+  color: #087a54;
+}
+
+.result-row .progress-arrow.worsened {
+  color: #b33a3a;
+}
+
+.result-row .progress-arrow.equal {
+  color: #536e75;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 360px) {
+  .result-row {
+    min-height: 148px;
+    grid-template-columns: minmax(0, 1fr) 174px;
+    grid-template-areas:
+      "date time"
+      "discipline discipline"
+      "meta meta";
+  }
+
+  .result-row .result-meta {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+    justify-self: start;
+  }
+}
+
+.home-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 28px !important;
+}
+
+.home-title img {
+  width: 42px;
+  height: 32px;
+}
+
+.style-card.breaststroke,
+.style-card.freestyle,
+.style-card.backstroke,
+.style-card.butterfly,
+.style-card.medley {
+  background-position: center !important;
+  background-size: cover !important;
+  background-repeat: no-repeat !important;
+}
+
+.home-page .style-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.home-page .style-card {
+  height: 150px;
+  padding: 16px;
+  border-radius: 20px;
+}
+
+.home-page .style-card.medley {
+  grid-column: 1 / -1;
+}
+
+.home-page .style-card.selected {
+  outline-color: #087a86;
+  outline-offset: 2px;
+}
+
+.home-page .style-card em {
+  right: 10px;
+  bottom: 10px;
+  padding: 5px 8px;
+  font-size: 13px;
+}
+
+.distance-section {
+  margin: 28px 0 12px;
+}
+
+.distance-section h2 {
+  margin: 0 0 12px;
+}
+
+.distance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.distance-grid button {
+  min-height: 64px;
+  padding: 8px 4px;
+  border: 1px solid #c9e2e5;
+  border-radius: 16px;
+  background: #fff;
+  color: #087a86;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.distance-grid button.selected {
+  border-color: #087a86;
+  background: #087a86;
+  color: #fff;
+}
+
+.distance-grid button svg {
+  width: 18px;
+  vertical-align: -3px;
+}
+
+@media (max-width: 360px) {
+  .home-page .style-card { height: 132px; }
+  .distance-grid { gap: 8px; }
+  .distance-grid button { font-size: 16px; }
+}
