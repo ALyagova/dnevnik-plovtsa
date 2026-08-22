@@ -197,6 +197,19 @@
   color: #536e75;
 }
 
+/* Длинные названия не должны конкурировать со временем за одну строку. */
+.result-row.long-discipline {
+  min-height: 148px;
+  grid-template-areas:
+    "date meta"
+    "discipline discipline"
+    "time time";
+}
+
+.result-row.long-discipline .result-time {
+  justify-self: end;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -223,6 +236,21 @@
     max-width: 100%;
     white-space: normal;
     text-align: left;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 360px) {
+  .result-row.long-discipline {
+    min-height: 174px;
+    grid-template-areas:
+      "date date"
+      "meta meta"
+      "discipline discipline"
+      "time time";
+  }
+
+  .result-row.long-discipline .result-meta {
     justify-self: start;
   }
 }
