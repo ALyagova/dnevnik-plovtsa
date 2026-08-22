@@ -42,14 +42,20 @@ function merge(local: FamilyState, remote: FamilyState): FamilyState {
 }
 
 async function request(code: string, method: 'GET' | 'PUT', state?: FamilyState) {
-  const response = await fetch(`${API_URL}/state`, {
-    method,
-    headers: { 'Content-Type': 'application/json', 'X-Family-Code': code },
-    body: state ? JSON.stringify(state) : undefined,
-  })
+  let response: Response
+  try {
+    response = await fetch(`${API_URL}/state`, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'X-Family-Code': code },
+      body: state ? JSON.stringify(state) : undefined,
+    })
+  } catch {
+    throw new Error('Нет связи с семейным сервером')
+  }
   if (!response.ok) {
     if (response.status === 401) throw new Error('Проверьте семейный код')
-    throw new Error('Не удалось соединиться с семейной базой')
+    if (response.status >= 500) throw new Error('Ошибка семейного сервера: проверьте подключение базы данных')
+    throw new Error(`Сервер вернул ошибку ${response.status}`)
   }
   return response.json() as Promise<ServerState>
 }
