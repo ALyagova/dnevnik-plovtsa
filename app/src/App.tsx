@@ -49,7 +49,7 @@ export default function App() {
     await db.results.put(item); await db.outbox.put({ id: newId(), type: 'upsert-result', entityId: item.id, createdAt: time }); setResults(await db.results.filter((r) => !r.deletedAt).toArray()); setSelected(item); setStyle(item.style); setDistance(item.distanceMeters); setScreen('history'); void sync()
   }
   const removeResult = async (item: SwimResult) => { const time = now(); await db.results.update(item.id, { deletedAt: time, updatedAt: time }); await db.outbox.put({ id: newId(), type: 'delete-result', entityId: item.id, createdAt: time }); setResults(await db.results.filter((r) => !r.deletedAt).toArray()); setScreen('history'); void sync() }
-  const connectFamily = async (code: string) => { saveFamilyCode(code); await sync(code) }
+  const connectFamily = async (code: string) => { const normalizedCode = code.trim(); saveFamilyCode(normalizedCode); await sync(normalizedCode) }
   const openForm = (nextStyle = style, nextDistance = distance) => { setSelected(null); setStyle(nextStyle); setDistance(nextDistance); setScreen('form') }
   const nav = (next: Screen) => setScreen(next)
   const current = results.filter((item) => item.style === style && item.distanceMeters === distance)

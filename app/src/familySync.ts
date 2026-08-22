@@ -55,12 +55,13 @@ async function request(code: string, method: 'GET' | 'PUT', state?: FamilyState)
 }
 
 export async function synchronizeFamily(code = getFamilyCode()) {
-  if (!code.trim()) throw new Error('Введите семейный код')
+  const normalizedCode = code.trim()
+  if (!normalizedCode) throw new Error('Введите семейный код')
   const local = await snapshot()
-  const remote = await request(code, 'GET')
+  const remote = await request(normalizedCode, 'GET')
   const merged = remote.state ? merge(local, remote.state) : local
   await replaceLocal(merged)
-  await request(code, 'PUT', merged)
+  await request(normalizedCode, 'PUT', merged)
   await db.outbox.clear()
   return merged
 }
