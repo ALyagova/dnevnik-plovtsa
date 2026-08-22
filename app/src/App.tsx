@@ -28,6 +28,7 @@ export default function App() {
   const [offline, setOffline] = useState(!navigator.onLine)
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(getFamilyCode() ? 'syncing' : 'not-connected')
   const [syncError, setSyncError] = useState('')
+  const syncInProgress = useRef(false)
 
   const refresh = async () => {
     const savedAthlete = await db.athletes.toCollection().first()
@@ -43,7 +44,23 @@ export default function App() {
     try { await synchronizeFamily(code); setSyncStatus('synced'); await refresh() }
     catch (error) { setSyncStatus('error'); setSyncError(error instanceof Error ? error.message : 'Не удалось синхронизировать данные') }
   }
-  useEffect(() => { void sync(); const on = () => void sync(); addEventListener('online', on); return () => removeEventListener('online', on) }, [])
+  useEffect(() => {
+    const runSync = () => {
+      if (syncInProgress.current) return
+      syncInProgress.current = true
+      void sync().finally(() => { syncInProgress.current = false })
+    }
+    const onVisible = () => { if (document.visibilityState === 'visible') runSync() }
+    runSync()
+    addEventListener('online', runSync)
+    addEventListener('visibilitychange', onVisible)
+    const interval = window.setInterval(onVisible, 30_000)
+    return () => {
+      removeEventListener('online', runSync)
+      removeEventListener('visibilitychange', onVisible)
+      window.clearInterval(interval)
+    }
+  }, [])
   const saveAthlete = async (name: string, birthDate: string, photoUrl?: string) => {
     const normalizedName = normalizeName(name)
     const time = now(); const item: Athlete = athlete ?? { id: newId(), name: normalizedName, birthDate, createdAt: time, updatedAt: time }
