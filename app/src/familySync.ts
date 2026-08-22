@@ -5,7 +5,26 @@ const API_URL = 'https://dnevnik-plovtsa-api.aalyagova.workers.dev'
 const CODE_KEY = 'dnevnik-plovtsa-family-code'
 
 export type FamilyState = { athlete: Athlete | null; results: SwimResult[] }
-type ServerState = { state: FamilyState | null; updatedAt?: string }
+
+/**
+ * Older versions of the family Worker could return a saved response envelope
+ * inside its `state` property.  Unwrap it defensively so a new device can
+ * still join an existing family instead of failing on an undefined results
+ * list.
+ */
+export function normalizeFamilyState(value: unknown): FamilyState | null {
+  if (!value || typeof value !== 'object') return null
+
+  const record = value as Record<string, unknown>
+  if (!('athlete' in record) && !('results' in record) && 'state' in record) {
+    return normalizeFamilyState(record.state)
+  }
+
+  return {
+    athlete: record.athlete && typeof record.athlete === 'object' ? record.athlete as Athlete : null,
+    results: Array.isArray(record.results) ? record.results as SwimResult[] : [],
+  }
+}
 
 export const getFamilyCode = () => localStorage.getItem(CODE_KEY) ?? ''
 export const saveFamilyCode = (code: string) => localStorage.setItem(CODE_KEY, code.trim())
@@ -57,15 +76,16 @@ async function request(code: string, method: 'GET' | 'PUT', state?: FamilyState)
     if (response.status >= 500) throw new Error('Ошибка семейного сервера: проверьте подключение базы данных')
     throw new Error(`Сервер вернул ошибку ${response.status}`)
   }
-  return response.json() as Promise<ServerState>
+  return response.json() as Promise<unknown>
 }
 
 export async function synchronizeFamily(code = getFamilyCode()) {
   const normalizedCode = code.trim()
   if (!normalizedCode) throw new Error('Введите семейный код')
   const local = await snapshot()
-  const remote = await request(normalizedCode, 'GET')
-  const merged = remote.state ? merge(local, remote.state) : local
+  const serverResponse = await request(normalizedCode, 'GET')
+  const remote = normalizeFamilyState(serverResponse)
+  const merged = remote ? merge(local, remote) : local
   await replaceLocal(merged)
   await request(normalizedCode, 'PUT', merged)
   await db.outbox.clear()
