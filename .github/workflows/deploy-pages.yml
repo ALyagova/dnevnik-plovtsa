@@ -35,7 +35,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Собрать приложение
         working-directory: app
-        run: pnpm run build -- --mode github-pages
+        run: pnpm run build:pages
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
