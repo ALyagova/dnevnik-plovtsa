@@ -1,4 +1,4 @@
-const CACHE = 'dnevnik-plovtsa-v41'
+const CACHE = 'dnevnik-plovtsa-v42'
 const BASE_PATH = self.location.pathname.replace(/sw\.js$/, '')
 const APP_SHELL = [BASE_PATH, `${BASE_PATH}index.html`, `${BASE_PATH}manifest.webmanifest`]
 self.addEventListener('install', (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())))
